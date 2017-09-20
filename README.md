@@ -34,8 +34,6 @@ poloPush.init().then(() => {
 
 # Methods:
 
-It's an eventListener, on can add/remove listener has well [https://nodejs.org/api/events.html](https://nodejs.org/api/events.html)
-
 Watch pair:
 ```js
 poloPush.subscribe('BTC_ETH');
@@ -71,3 +69,5 @@ poloPush.on('BTC_ETH-trade', (trade) => {
 
   });
 ```
+
+It's an eventListener, on can add/remove listeners(for orderbook and trades) has well [https://nodejs.org/api/events.html](https://nodejs.org/api/events.html)
