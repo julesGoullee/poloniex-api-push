@@ -107,7 +107,8 @@ class PoloniexApiPush extends EventEmitter {
             case 't':
 
               this.emit(`${market.currencyPair}-trade`, {
-                type: entry[1] === 1 ? 'buy' : 'sell',
+                id: entry[1],
+                type: entry[2] === 1 ? 'buy' : 'sell',
                 rate: entry[3],
                 amount: entry[4]
               });
