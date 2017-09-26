@@ -8,8 +8,10 @@ class PoloniexApiPush extends EventEmitter {
 
     super();
     this.urlPath = 'api2.poloniex.com';
+    this.resetTimer = 1500;
     this.ws = null;
     this.subscriptions = [];
+    this.connecting = false;
 
   }
 
@@ -19,13 +21,9 @@ class PoloniexApiPush extends EventEmitter {
     let resolver = null;
     const p = new Promise(resolve => resolver = resolve);
 
-    this._ws.on('open', () => {
-
-      this.onOpen(resolver);
-
-    });
-
-    this._ws.on('close', () => this.resetWS() );
+    this._ws.on('open', () => this.onOpen(resolver) );
+    this._ws.on('error', (err) => this.connecting ? null : this.resetWS() );
+    this._ws.on('close', () => this.connecting ? null : this.resetWS() );
 
     return p;
 
@@ -33,11 +31,19 @@ class PoloniexApiPush extends EventEmitter {
 
   resetWS(){
 
-    this.init().then(() => {
-     
-      this.subscriptions.forEach(channel => this.subscribe(channel) );
-     
-    }).catch(err => console.error(err) );
+    this.connecting = true;
+
+    setTimeout( () => {
+
+      this.init().then(() => {
+
+        this.subscriptions.forEach(channel => this.subscribe(channel) );
+
+      }).catch(err => console.error(err) );
+
+      this.connecting = false;
+
+    }, this.resetTimer);
 
   }
   
