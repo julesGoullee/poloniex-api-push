@@ -84,6 +84,12 @@ class PoloniexApiPush extends EventEmitter {
 
       if(typeof seq === 'number'){
 
+        if(!Array.isArray(data[2]) ){
+
+          return console.error(`Unknown message: ${data}`);
+
+        }
+
         const market = markets.byID[data[0]];
 
         data[2].forEach( (entry) => {
