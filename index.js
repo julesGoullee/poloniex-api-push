@@ -33,11 +33,28 @@ class PoloniexApiPush extends EventEmitter {
 
     this.connecting = true;
 
+    if(this._ws instanceof WebSocket && (this._ws.readyState !== this._ws.CLOSED || this._ws.readyState !== this._ws.CLOSING) ){
+
+      if(this._ws instanceof WebSocket && this._ws.readyState === this._ws.OPEN){
+
+        const subscriptions = Object.assign([], this.subscriptions);
+        subscriptions.forEach(pair => this.unSubscribe(pair) );
+        this.subscriptions = subscriptions;
+
+      }
+
+      this._ws.close();
+      this._ws.terminate();
+
+    }
+
     setTimeout( () => {
 
       this.init().then(() => {
 
-        this.subscriptions.forEach(channel => this.subscribe(channel) );
+        const subscriptions = Object.assign([], this.subscriptions);
+        this.subscriptions = [];
+        subscriptions.forEach(channel => this.subscribe(channel) );
 
       }).catch(err => console.error(err) );
 
@@ -46,24 +63,30 @@ class PoloniexApiPush extends EventEmitter {
     }, this.resetTimer);
 
   }
-  
+
   onOpen(cb){
 
+    if(this.heartbeat){
+
+      clearInterval(this.heartbeat);
+
+    }
+
     this.heartbeat = setInterval( () => {
-      
+
       try{
 
         this._ws.send('.');
-        
+
       } catch(err){
 
         clearTimeout(this.heartbeat);
         this.resetWS();
-        
+
       }
-      
-    }, 60000);
-    
+
+    }, 60 * 1000);
+
     this.dispatchMessages();
     cb();
 
@@ -136,8 +159,12 @@ class PoloniexApiPush extends EventEmitter {
 
   subscribe(pair){
 
-    this.subscriptions.push(pair);
-    this.send('subscribe', pair);
+    if(!this.subscriptions.find(subPair => subPair === pair) ){
+
+      this.subscriptions.push(pair);
+      this.send('subscribe', pair);
+
+    }
 
   }
 
@@ -151,7 +178,7 @@ class PoloniexApiPush extends EventEmitter {
 
   send(cmd, channel){
 
-    if(this._ws instanceof WebSocket && this._ws.readyState > 0){
+    if(this._ws instanceof WebSocket && this._ws.readyState === this._ws.OPEN){
 
       return this._ws.send(JSON.stringify({command: cmd, channel }) );
 
